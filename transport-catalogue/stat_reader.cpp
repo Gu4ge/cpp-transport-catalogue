@@ -6,14 +6,14 @@ void ParseAndPrintStat(const TransportCatalogue::TransportCatalogue &transport_c
     // Реализуйте самостоятельно
 
     auto it = request.find_first_of(' ');
-    std::string name = std::string(request.substr(it + 1));
+    std::string_view name = request.substr(it + 1);
 
     if (request.substr(0, it) == "Bus")
     {
-        if (transport_catalogue.findTrain(name) == true)
+        if (transport_catalogue.findTrain(name) != nullptr)
         {
 
-            auto info = transport_catalogue.getInfo(name);
+             TransportCatalogue::inforamtion::Info info = transport_catalogue.getInfo(name);
 
             output << request << ": " << info.all_station << " stops on route, " << info.unique_station << " unique stops, " << info.distance << " route length\n";
         }
@@ -31,7 +31,7 @@ void ParseAndPrintStat(const TransportCatalogue::TransportCatalogue &transport_c
         }
         else
         {
-            std::set<std::string> routes = transport_catalogue.getTrains(name);
+            std::set<std::string_view> routes = transport_catalogue.getTrains(name);
             if (routes.size() == 0)
             {
                 output << request << ": no buses\n";

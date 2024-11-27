@@ -7,21 +7,23 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <stdexcept>
 
 #include "geo.h"
 
 namespace TransportCatalogue
 {
+
 	namespace inforamtion
 	{
 		struct Info
 		{
 			Info() = default;
-			Info(std::string &name) : name_(name) {}
+			Info(const std::string &name) : name_(name) {}
 			std::string name_;
-			size_t unique_station;
-			size_t all_station;
-			double distance;
+			size_t all_station = 0;
+			size_t unique_station = 0;
+			double distance = 0.0;
 		};
 	}
 
@@ -30,7 +32,7 @@ namespace TransportCatalogue
 		struct Stop
 		{
 			std::string name;
-			double x = 0.0, y = 0.0;
+			Coordinates coordinates;
 		};
 
 		struct Bus
@@ -46,29 +48,24 @@ namespace TransportCatalogue
 	public:
 		TransportCatalogue() = default;
 
-		void addStation(std::string &name, double x = 0.0, double y = 0.0);
+		void addStation(std::string_view name, Coordinates coordinates);
 
-		void addTrain(std::string &name, const std::vector<std::string_view> stops);
+		void addTrain(std::string_view name, const std::vector<std::string_view> stops);
 
-		bool findTrain(std::string &name) const noexcept;
+		train::Stop *findStation(std::string_view name_station) const;
 
-		bool existStation(std::string &name) const noexcept;
+		const train::Bus *findTrain(std::string_view name_train) const;
 
-		train::Stop *findStation(std::string &name) const;
+		std::set<std::string_view> getTrains(std::string_view name_station) const;
 
-		size_t getUniqueSize(std::string &name) const;
-
-		size_t getAllSize(std::string &name) const;
-
-		double getDistance(std::string &name) const;
-
-		std::set<std::string> getTrains(std::string &name) const;
-
-		inforamtion::Info getInfo(std::string &name) const;
+		inforamtion::Info getInfo(std::string_view name) const; 
 
 	private:
-		std::unordered_map<std::string, const train::Bus *> trains_;
-		std::unordered_map<std::string, train::Stop *> stops_map_;
+
+		void checkIter(std::string_view name_train) const;
+
+		std::unordered_map<std::string_view, const train::Bus *> trains_;
+		std::unordered_map<std::string_view, train::Stop *> stops_map_;
 		std::deque<train::Stop> all_stops_;
 		std::deque<train::Bus> all_buses_;
 	};

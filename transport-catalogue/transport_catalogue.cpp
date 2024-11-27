@@ -1,136 +1,117 @@
 #include "transport_catalogue.h"
 
-void TransportCatalogue::TransportCatalogue::addStation(std::string& name, double x, double y)
+void TransportCatalogue::TransportCatalogue::addStation(std::string_view name, Coordinates coordinates)
 {
 	train::Stop *tmp = findStation(name);
-	if (tmp != nullptr && (x != 0.0 && y != 0.0))
+	if (tmp != nullptr && (coordinates.lat != 0.0 && coordinates.lng != 0.0))
 	{
-		tmp->x = x;
-		tmp->y = y;
+		tmp->coordinates.lat = coordinates.lat;
+		tmp->coordinates.lng = coordinates.lng;
 	}
 	else if (tmp == nullptr)
 	{
 		train::Stop stop;
-		stop.name = name;
-		stop.x = x;
-		stop.y = y;
+		stop.name = std::string(name);
+		stop.coordinates.lat = coordinates.lat;
+		stop.coordinates.lng = coordinates.lng;
 
 		all_stops_.push_back(std::move(stop));
-		stops_map_.insert({all_stops_.back().name, &all_stops_.back()});
+		stops_map_[all_stops_.back().name] = &all_stops_.back();
 	}
 }
 
-void TransportCatalogue::TransportCatalogue::addTrain(std::string& name, const std::vector<std::string_view> stops)
+void TransportCatalogue::TransportCatalogue::addTrain(std::string_view name, const std::vector<std::string_view> stops)
 {
-	if (findTrain(name) == false)
+	if (findTrain(name) == nullptr )
 	{
 		train::Bus bus;
-		bus.name = name;
+		bus.name =  std::string(name);;
 		for (auto &i : stops)
 		{
-			std::string str = std::string(i);
-			if (existStation(str) == false)
+			
+			if (findStation(i) == nullptr)
 			{
 				train::Stop stop;
-				stop.name = str;
-				stop.x = 0.0;
-				stop.y = 0.0;
+				stop.name =  std::string(i);;
+				stop.coordinates.lat = 0.0;
+				stop.coordinates.lng = 0.0;
 
 				all_stops_.push_back(std::move(stop));
-				stops_map_.insert({all_stops_.back().name, &all_stops_.back()});
+				stops_map_[all_stops_.back().name] = &all_stops_.back();
 			}
-			bus.stops.push_back(findStation(str));
+			bus.stops.push_back(findStation(i));
 		}
 		all_buses_.push_back(std::move(bus));
-		trains_.insert({all_buses_.back().name, &all_buses_.back()});
+		trains_[all_buses_.back().name] =  &all_buses_.back();
 	}
 }
 
-bool TransportCatalogue::TransportCatalogue::findTrain(std::string& name) const noexcept
+TransportCatalogue::train::Stop *TransportCatalogue::TransportCatalogue::findStation(std::string_view name_station) const
 {
-	if (trains_.find(name) != trains_.end())
+	if (stops_map_.count(name_station) != 0)
 	{
-		return true;
-	}
-	return false;
-}
-
-bool TransportCatalogue::TransportCatalogue::existStation(std::string& name) const noexcept
-{
-	if (findStation(name) == nullptr)
-	{
-		return false;
-	}
-	return true;
-}
-
-TransportCatalogue::train::Stop *TransportCatalogue::TransportCatalogue::findStation(std::string& name) const
-{
-	if (stops_map_.count(name) != 0)
-	{
-		return stops_map_.find(name)->second;
+		return stops_map_.at(name_station);
 	}
 	return nullptr;
 }
 
-size_t TransportCatalogue::TransportCatalogue::getUniqueSize(std::string& name) const
+const TransportCatalogue::train::Bus *TransportCatalogue::TransportCatalogue::findTrain(std::string_view name_train) const
 {
-	
+	if (trains_.count(name_train) != 0)
+	{
+		return trains_.at(name_train);
+	}
+	return nullptr;
+}
+
+std::set<std::string_view> TransportCatalogue::TransportCatalogue::getTrains(std::string_view name_station) const
+{
+	std::set<std::string_view> result;
+	for (const auto &train : trains_)
+	{
+		for (const auto &stop : train.second->stops)
+		{
+			if (stop->name == name_station)
+			{
+				if (result.count(train.first) == 0)
+				{
+					result.insert(train.first);
+					break;
+				}
+			}
+		}
+	}
+	return result;
+}
+
+TransportCatalogue::inforamtion::Info TransportCatalogue::TransportCatalogue::getInfo(std::string_view name) const
+{
+	checkIter(name);
+	inforamtion::Info info;
+
 	std::unordered_set<std::string> unique;
 	for (auto &i : trains_.find(name)->second->stops)
 	{
 		unique.insert(i->name);
 	}
-	return unique.size();
-}
 
-size_t TransportCatalogue::TransportCatalogue::getAllSize(std::string& name) const
-{
-	return trains_.find(name)->second->stops.size();
-}
+	info.unique_station = unique.size();
 
-double TransportCatalogue::TransportCatalogue::getDistance(std::string& name) const
-{
-	auto& tmp = trains_.find(name)->second->stops;
-	double distance = 0.0;
+	info.all_station = trains_.find(name)->second->stops.size();
+
+	auto &tmp = trains_.find(name)->second->stops;
 	for (size_t i = 1; i < tmp.size(); i++)
 	{
-		Coordinates from;
-		Coordinates to;
-		from.lat = tmp[i - 1]->x;
-		from.lng = tmp[i - 1]->y;
-		to.lat = tmp[i]->x;
-		to.lng = tmp[i]->y;
-		distance += ComputeDistance(from, to);
+		info.distance += ComputeDistance(tmp[i - 1]->coordinates, tmp[i]->coordinates);
 	}
 
-	return distance;
+	return info;
 }
 
-std::set<std::string> TransportCatalogue::TransportCatalogue::getTrains(std::string& name) const
+void TransportCatalogue::TransportCatalogue::checkIter(std::string_view name_train) const
+{
+	if (trains_.find(name_train) == trains_.end())
 	{
-		std::set<std::string> result;
-		for (const auto &train : trains_)
-		{
-			for (const auto &stop : train.second->stops)
-			{
-				if (stop->name == name)
-				{
-					if (result.count(train.first) == 0)
-					{
-						result.insert(train.first);
-						break;
-					}
-				}
-			}
-		}
-		return result;
+		throw std::invalid_argument("invalid train name");
 	}
-
-	TransportCatalogue::inforamtion::Info TransportCatalogue::TransportCatalogue::getInfo(std::string& name) const{
-		inforamtion::Info info(name);
-		info.all_station = getAllSize(info.name_);
-		info.unique_station = getUniqueSize(info.name_);
-		info.distance = getDistance(info.name_);
-		return info;
-	}
+}

@@ -128,7 +128,7 @@ void InputReader::ApplyCommands([[maybe_unused]] TransportCatalogue::TransportCa
         {
             std::string id = std::string(Trim(i.id));
             auto coordinates = ParseCoordinates(Trim(i.description)); // координаты
-            catalogue.addStation(id, coordinates.lat, coordinates.lng);
+            catalogue.addStation(id, coordinates);
         }
         else if (command == "Bus")
         {
