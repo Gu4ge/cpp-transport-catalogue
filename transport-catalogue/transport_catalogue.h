@@ -31,6 +31,7 @@ namespace TransportCatalogue
 	{
 		struct Stop
 		{
+
 			std::string name;
 			Coordinates coordinates;
 		};
@@ -38,7 +39,7 @@ namespace TransportCatalogue
 		struct Bus
 		{
 			std::string name;
-			std::vector<Stop *> stops;
+			std::vector<const Stop *> stops;
 		};
 	}
 
@@ -50,9 +51,9 @@ namespace TransportCatalogue
 
 		void addStation(std::string_view name, Coordinates coordinates);
 
-		void addTrain(std::string_view name, const std::vector<std::string_view> stops);
+		void addTrain(std::unordered_map<std::string_view, std::vector<std::string_view>> trains);
 
-		train::Stop *findStation(std::string_view name_station) const;
+		const train::Stop *findStation(std::string_view name_station) const;
 
 		const train::Bus *findTrain(std::string_view name_train) const;
 
@@ -65,7 +66,7 @@ namespace TransportCatalogue
 		void checkIter(std::string_view name_train) const;
 
 		std::unordered_map<std::string_view, const train::Bus *> trains_;
-		std::unordered_map<std::string_view, train::Stop *> stops_map_;
+		std::unordered_map<std::string_view, const train::Stop *> stops_map_;
 		std::deque<train::Stop> all_stops_;
 		std::deque<train::Bus> all_buses_;
 	};

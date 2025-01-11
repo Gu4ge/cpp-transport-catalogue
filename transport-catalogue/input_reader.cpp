@@ -120,21 +120,24 @@ void InputReader::ParseLine(std::string_view line)
 
 void InputReader::ApplyCommands([[maybe_unused]] TransportCatalogue::TransportCatalogue &catalogue) const
 {
+    std::unordered_map<std::string_view, std::vector<std::string_view>> trains;
+
     // Реализуйте метод самостоятельно
     for (auto &i : commands_)
     {
         std::string_view command = Trim(i.command); // убрали пробелы из команды
         if (command == "Stop")
         {
-            std::string id = std::string(Trim(i.id));
+            std::string_view id = Trim(i.id);
             auto coordinates = ParseCoordinates(Trim(i.description)); // координаты
             catalogue.addStation(id, coordinates);
         }
         else if (command == "Bus")
         {
-            std::string id = std::string(Trim(i.id));
+            std::string_view id = Trim(i.id);
             auto route = ParseRoute(Trim(i.description)); // маршрут
-            catalogue.addTrain(id, route);
+            trains.insert({id, route});
         }
     }
+    catalogue.addTrain(trains);
 }
