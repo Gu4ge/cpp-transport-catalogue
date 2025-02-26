@@ -5,8 +5,8 @@
 #include <iterator>
 
 /**
- * Парсит строку вида "10.123,  -30.1837" и возвращает пару координат (широта, долгота)
- */
+Парсит строку вида "10.123,  -30.1837" и возвращает пару координат (широта, долгота)
+ **/
 Coordinates ParseCoordinates(std::string_view str)
 {
     static const double nan = std::nan("");

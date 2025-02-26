@@ -62,6 +62,10 @@ namespace TransportCatalogue
 
 		inforamtion::Info getInfo(std::string_view name) const;
 
+		void add(const train::Stop* stop1, const train::Stop* stop2, int distance);
+
+    	int getDistance(const train::Stop* stop1, const train::Stop* stop2) const;
+
 	private:
 		void checkIter(std::string_view name_train) const;
 

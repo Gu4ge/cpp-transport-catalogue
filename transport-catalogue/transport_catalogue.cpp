@@ -75,23 +75,7 @@ int TransportCatalogue::TransportCatalogue::getLength(std::string_view bus_numbe
 		auto curr_station = findStation(stops[i]->name);
 		auto next_station = findStation(stops[i + 1]->name);
 
-		auto res = abstands_.find({curr_station, next_station});
-		if (res != abstands_.end())
-		{
-			len += res->second;
-		}
-		else
-		{
-			res = abstands_.find({next_station, curr_station});
-			if (res != abstands_.end())
-			{
-				len += res->second;
-			}
-			else
-			{
-				len += 0;
-			}
-		}
+		len += getDistance(curr_station, next_station);
 	}
 	return len;
 }
@@ -124,6 +108,21 @@ TransportCatalogue::inforamtion::Info TransportCatalogue::TransportCatalogue::ge
 	return info;
 }
 
+void TransportCatalogue::TransportCatalogue::add(const train::Stop *stop1, const train::Stop *stop2, int distance)
+{
+	abstands_.insert({std::make_pair(stop1, stop2), distance});
+}
+
+int TransportCatalogue::TransportCatalogue::getDistance(const train::Stop *stop1, const train::Stop *stop2) const
+{
+	if (abstands_.count(std::make_pair(stop1, stop2)))
+		return abstands_.at(std::make_pair(stop1, stop2));
+	else if (abstands_.count(std::make_pair(stop2, stop1)))
+		return abstands_.at(std::make_pair(stop2, stop1));
+	else
+		return 0;
+}
+
 void TransportCatalogue::TransportCatalogue::addAbstands(const std::unordered_map<std::string_view, std::vector<std::pair<std::string, std::string>>> &stops)
 {
 	for (const auto &station : stops)
@@ -132,7 +131,10 @@ void TransportCatalogue::TransportCatalogue::addAbstands(const std::unordered_ma
 		for (const auto &value : station.second)
 		{
 			auto abstand_stop = findStation(value.first);
-			abstands_.insert({std::make_pair(main_stop, abstand_stop), std::stoi(value.second)});
+			if (getDistance(main_stop, abstand_stop) != std::stoi(value.second) && abstands_.count({main_stop, abstand_stop}) == 0)
+			{
+				add(main_stop, abstand_stop, std::stoi(value.second));
+			}
 		}
 	}
 }
@@ -144,3 +146,4 @@ void TransportCatalogue::TransportCatalogue::checkIter(std::string_view name_tra
 		throw std::invalid_argument("invalid train name");
 	}
 }
+
