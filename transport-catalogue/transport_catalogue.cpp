@@ -65,6 +65,37 @@ std::set<std::string_view> TransportCatalogue::TransportCatalogue::getTrains(std
 	return result;
 }
 
+int TransportCatalogue::TransportCatalogue::getLength(std::string_view bus_number) const
+{
+	int len = 0;
+	auto stops = findTrain(bus_number)->stops;
+
+	for (size_t i = 0; i < stops.size() - 1; ++i)
+	{
+		auto curr_station = findStation(stops[i]->name);
+		auto next_station = findStation(stops[i + 1]->name);
+
+		auto res = abstands_.find({curr_station, next_station});
+		if (res != abstands_.end())
+		{
+			len += res->second;
+		}
+		else
+		{
+			res = abstands_.find({next_station, curr_station});
+			if (res != abstands_.end())
+			{
+				len += res->second;
+			}
+			else
+			{
+				len += 0;
+			}
+		}
+	}
+	return len;
+}
+
 TransportCatalogue::inforamtion::Info TransportCatalogue::TransportCatalogue::getInfo(std::string_view name) const
 {
 	checkIter(name);
@@ -77,17 +108,33 @@ TransportCatalogue::inforamtion::Info TransportCatalogue::TransportCatalogue::ge
 	}
 
 	info.unique_station = unique.size();
-
 	info.all_station = trains_.find(name)->second->stops.size();
+	info.distance = static_cast<double>(getLength(name));
 
 	auto &tmp = trains_.find(name)->second->stops;
 	const size_t size = tmp.size();
+	double geo_abstand = 0.0;
 	for (size_t i = 1; i < size; i++)
 	{
-		info.distance += ComputeDistance(tmp[i - 1]->coordinates, tmp[i]->coordinates);
+		geo_abstand += ComputeDistance(tmp[i - 1]->coordinates, tmp[i]->coordinates);
 	}
 
+	info.curvature = info.distance / geo_abstand;
+
 	return info;
+}
+
+void TransportCatalogue::TransportCatalogue::addAbstands(const std::unordered_map<std::string_view, std::vector<std::pair<std::string, std::string>>> &stops)
+{
+	for (const auto &station : stops)
+	{
+		auto main_stop = findStation(station.first);
+		for (const auto &value : station.second)
+		{
+			auto abstand_stop = findStation(value.first);
+			abstands_.insert({std::make_pair(main_stop, abstand_stop), std::stoi(value.second)});
+		}
+	}
 }
 
 void TransportCatalogue::TransportCatalogue::checkIter(std::string_view name_train) const

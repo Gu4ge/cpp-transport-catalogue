@@ -6,8 +6,8 @@
       "type": "lldb",
       "request": "launch",
       "args": [],
-      "cwd": "/Users/alexandr/Desktop/ya_prac/ya_prac_projects/cpp-transport-catalogue",
-      "program": "/Users/alexandr/Desktop/ya_prac/ya_prac_projects/cpp-transport-catalogue/build/Debug/outDebug"
+      "cwd": "/Users/alexandr/Desktop/ya_prac/ya_prac_projects/cpp-transport-catalogue/transport-catalogue",
+      "program": "/Users/alexandr/Desktop/ya_prac/ya_prac_projects/cpp-transport-catalogue/transport-catalogue/build/Debug/outDebug"
     }
   ]
 }

@@ -24,6 +24,7 @@ namespace TransportCatalogue
 			size_t all_station = 0;
 			size_t unique_station = 0;
 			double distance = 0.0;
+			double curvature = 0.0;
 		};
 	}
 
@@ -31,21 +32,19 @@ namespace TransportCatalogue
 	{
 		struct Stop
 		{
-
-			std::string name;
-			Coordinates coordinates;
+			std::string name;		 // название остановки
+			Coordinates coordinates; // координаты остановки
 		};
 
 		struct Bus
 		{
-			std::string name;
-			std::vector<const Stop *> stops;
+			std::string name;				 // номер автобуса
+			std::vector<const Stop *> stops; // маршрут
 		};
 	}
 
 	class TransportCatalogue
 	{
-		// Реализуйте класс самостоятельно
 	public:
 		TransportCatalogue() = default;
 
@@ -53,20 +52,35 @@ namespace TransportCatalogue
 
 		void addTrain(std::unordered_map<std::string_view, std::vector<std::string_view>> trains);
 
+		void addAbstands(const std::unordered_map<std::string_view, std::vector<std::pair<std::string, std::string>>> &stops);
+
 		const train::Stop *findStation(std::string_view name_station) const;
 
 		const train::Bus *findTrain(std::string_view name_train) const;
 
 		std::set<std::string_view> getTrains(std::string_view name_station) const;
 
-		inforamtion::Info getInfo(std::string_view name) const; 
+		inforamtion::Info getInfo(std::string_view name) const;
 
 	private:
-
 		void checkIter(std::string_view name_train) const;
+
+		int getLength(std::string_view bus_number) const;
+
+		struct hash_pair
+		{
+			template <class T>
+			std::size_t operator()(const std::pair<T, T> &p) const
+			{
+				auto hash1 = std::hash<T>{}(p.first);
+				auto hash2 = std::hash<T>{}(p.second);
+				return hash1 ^ (hash2 << 1);
+			}
+		};
 
 		std::unordered_map<std::string_view, const train::Bus *> trains_;
 		std::unordered_map<std::string_view, const train::Stop *> stops_map_;
+		std::unordered_map<std::pair<const train::Stop *, const train::Stop *>, int, hash_pair> abstands_;
 		std::deque<train::Stop> all_stops_;
 		std::deque<train::Bus> all_buses_;
 	};

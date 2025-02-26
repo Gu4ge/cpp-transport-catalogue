@@ -1,21 +1,22 @@
 #include "stat_reader.h"
 
-void ParseAndPrintStat(const TransportCatalogue::TransportCatalogue &transport_catalogue, std::string_view request,
-                       std::ostream &output)
+void ParseAndPrintStat(const TransportCatalogue::TransportCatalogue &transport_catalogue, std::string_view request, std::ostream &output)
 {
-    // Реализуйте самостоятельно
-
     auto it = request.find_first_of(' ');
     std::string_view name = request.substr(it + 1);
 
     if (request.substr(0, it) == "Bus")
     {
-        if (transport_catalogue.findTrain(name) != nullptr)
+        const auto *bus = transport_catalogue.findTrain(name);
+        if (bus)
         {
-
-             TransportCatalogue::inforamtion::Info info = transport_catalogue.getInfo(name);
-
-            output << request << ": " << info.all_station << " stops on route, " << info.unique_station << " unique stops, " << info.distance << " route length\n";
+            auto info = transport_catalogue.getInfo(name);
+            output << request << ": "
+                   << info.all_station << " stops on route, "
+                   << info.unique_station << " unique stops, "
+                   << std::setprecision(6)
+                   << info.distance << " route length, "
+                   << info.curvature << " curvature\n";
         }
         else
         {
@@ -24,29 +25,27 @@ void ParseAndPrintStat(const TransportCatalogue::TransportCatalogue &transport_c
     }
     else
     {
-        
-        if (transport_catalogue.findStation(name) == nullptr)
+        const auto *stop = transport_catalogue.findStation(name);
+        if (!stop)
         {
             output << request << ": not found\n";
         }
         else
         {
-            std::set<std::string_view> routes = transport_catalogue.getTrains(name);
-            if (routes.size() == 0)
+            auto routes = transport_catalogue.getTrains(name);
+            if (routes.empty())
             {
                 output << request << ": no buses\n";
             }
             else
             {
                 output << request << ": buses";
-                for (const auto &i : routes)
+                for (const auto &route : routes)
                 {
-                    output << " " << i;
+                    output << " " << route;
                 }
                 output << "\n";
             }
         }
     }
-
-    // Bus X: R stops on route, U unique stops, L route length
 }

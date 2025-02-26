@@ -118,18 +118,66 @@ void InputReader::ParseLine(std::string_view line)
     }
 }
 
+std::pair<std::string, std::string> InputReader::GetCoordinatesAndAbstand(std::string_view line) const
+{
+    auto temp1 = line.find_first_of(",");
+    auto temp2 = line.find_first_of(",", temp1 + 1);
+    return {std::string(line.substr(0, temp2)), std::string(line.substr(temp2 + 2))}; // поделили на координаты и на расстояния до остановок
+}
+
+std::vector<std::pair<std::string, std::string>> InputReader::GetAbstands(std::string_view line) const
+{
+    std::vector<std::pair<std::string, std::string>> result;
+    size_t pointer1 = 0;
+    size_t pointer2 = line.find(' ');
+
+    while (pointer1 < line.size() && pointer2 != std::string::npos)
+    {
+        auto abstand = line.substr(pointer1, pointer2 - pointer1);
+
+        pointer1 = pointer2 + 4;
+        pointer2 = line.find(',', pointer1);
+
+        auto train = line.substr(pointer1, pointer2 - pointer1);
+
+        
+        result.push_back({std::string(train), std::string(abstand)});
+
+        if (pointer2 != std::string::npos)
+        {
+            pointer1 = pointer2 + 2;
+            pointer2 = line.find(' ', pointer1);
+        }
+    }
+
+    return result; // поделили на пары остановка-расстояние 
+}
+
 void InputReader::ApplyCommands([[maybe_unused]] TransportCatalogue::TransportCatalogue &catalogue) const
 {
     std::unordered_map<std::string_view, std::vector<std::string_view>> trains;
+    std::unordered_map<std::string_view, std::vector<std::pair<std::string, std::string>>> stops;
 
     // Реализуйте метод самостоятельно
     for (auto &i : commands_)
     {
         std::string_view command = Trim(i.command); // убрали пробелы из команды
+
         if (command == "Stop")
         {
             std::string_view id = Trim(i.id);
-            auto coordinates = ParseCoordinates(Trim(i.description)); // координаты
+            auto description = Trim(i.description);
+            std::pair<std::string, std::string> temp;
+            std::vector<std::pair<std::string, std::string>> abstand;
+
+            if (std::count(description.begin(), description.end(), ',') != 1)
+            {
+                temp = GetCoordinatesAndAbstand(description);
+                abstand = GetAbstands(temp.second);
+                stops[id] = abstand;
+            }
+
+            auto coordinates = ParseCoordinates(Trim(temp.first)); // координаты
             catalogue.addStation(id, coordinates);
         }
         else if (command == "Bus")
@@ -140,4 +188,5 @@ void InputReader::ApplyCommands([[maybe_unused]] TransportCatalogue::TransportCa
         }
     }
     catalogue.addTrain(trains);
+    catalogue.addAbstands(stops);
 }

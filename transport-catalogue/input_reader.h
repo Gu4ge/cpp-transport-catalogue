@@ -2,7 +2,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
-
+#include <iomanip>
 #include "geo.h"
 #include "transport_catalogue.h"
 
@@ -35,4 +35,8 @@ public:
 
 private:
     std::vector<CommandDescription> commands_;
+
+    std::pair<std::string, std::string> GetCoordinatesAndAbstand(std::string_view line) const;
+
+    std::vector<std::pair<std::string, std::string>> GetAbstands(std::string_view line) const;
 };
