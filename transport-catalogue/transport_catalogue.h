@@ -10,47 +10,19 @@
 #include <stdexcept>
 
 #include "geo.h"
+#include "domain.h"
 
 namespace TransportCatalogue
 {
-
-	namespace inforamtion
-	{
-		struct Info
-		{
-			Info() = default;
-			Info(const std::string &name) : name_(name) {}
-			std::string name_;
-			size_t all_station = 0;
-			size_t unique_station = 0;
-			double distance = 0.0;
-			double curvature = 0.0;
-		};
-	}
-
-	namespace train
-	{
-		struct Stop
-		{
-			std::string name;		 // название остановки
-			Coordinates coordinates; // координаты остановки
-		};
-
-		struct Bus
-		{
-			std::string name;				 // номер автобуса
-			std::vector<const Stop *> stops; // маршрут
-		};
-	}
 
 	class TransportCatalogue
 	{
 	public:
 		TransportCatalogue() = default;
 
-		void addStation(std::string_view name, Coordinates coordinates);
+		void addStation(std::string_view name, geo::Coordinates coordinates);
 
-		void addTrain(std::unordered_map<std::string_view, std::vector<std::string_view>> trains);
+		void addTrain(std::string_view name, const std::vector<std::string_view> &stops, bool is_circle);
 
 		void addAbstands(const std::unordered_map<std::string_view, std::vector<std::pair<std::string, std::string>>> &stops);
 
@@ -62,9 +34,11 @@ namespace TransportCatalogue
 
 		inforamtion::Info getInfo(std::string_view name) const;
 
-		void add(const train::Stop* stop1, const train::Stop* stop2, int distance);
+		const std::unordered_map<std::string_view, const train::Bus *> &getAllTrains() const;
 
-    	int getDistance(const train::Stop* stop1, const train::Stop* stop2) const;
+		void add(const train::Stop *stop1, const train::Stop *stop2, int distance);
+
+		int getDistance(const train::Stop *stop1, const train::Stop *stop2) const;
 
 	private:
 		void checkIter(std::string_view name_train) const;
